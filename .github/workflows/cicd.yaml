@@ -43,7 +43,6 @@ jobs:
          version: v1.56.2
      - name: Run golangci-lint in demo directory
        run: |
-         cd demo/demo
          golangci-lint run
  push:
    runs-on: ubuntu-latest
