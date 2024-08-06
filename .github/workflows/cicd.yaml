@@ -37,6 +37,7 @@ jobs:
      run: |
        cd demo
        golangci-lint run
+
  push:
    runs-on: ubuntu-latest
    needs: build
