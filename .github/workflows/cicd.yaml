@@ -10,78 +10,78 @@ jobs:
  build:
    runs-on: ubuntu-latest
    steps:
-   - name: Checkout repository
-     uses: actions/checkout@v4
-   - name: Set up Go 1.22
-     uses: actions/setup-go@v2
-     with:
-       go-version: 1.22
-   - name: Build
-     run: |
-       cd demo
-       go build -o go-web-app
-   - name: Test
-     run: |
-       cd demo
-       go test ./...
+     - name: Checkout repository
+       uses: actions/checkout@v4
+     - name: Set up Go 1.22
+       uses: actions/setup-go@v2
+       with:
+         go-version: 1.22
+     - name: Build
+       run: |
+         cd demo
+         go build -o go-web-app
+     - name: Test
+       run: |
+         cd demo
+         go test ./...
  code-quality:
-    runs-on: ubuntu-latest
-    steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
-    - name: Set up Go 1.22
-      uses: actions/setup-go@v2
-      with:
-        go-version: 1.22
-    - name: Install dependencies
-      run: |
-       cd demo
-       go mod download
- - name: Run golangci-lint
-   uses: golangci/golangci-lint-action@v6
-   with:
-     version: v1.56.2
- - name: Run golangci-lint in demo directory
-   run: |
-     cd demo
-     golangci-lint run
+   runs-on: ubuntu-latest
+   steps:
+     - name: Checkout repository
+       uses: actions/checkout@v4
+     - name: Set up Go 1.22
+       uses: actions/setup-go@v2
+       with:
+         go-version: 1.22
+     - name: Install dependencies
+       run: |
+         cd demo
+         go mod download
+     - name: Run golangci-lint
+       uses: golangci/golangci-lint-action@v6
+       with:
+         version: v1.56.2
+     - name: Run golangci-lint in demo directory
+       run: |
+         cd demo
+         golangci-lint run
  push:
    runs-on: ubuntu-latest
    needs: build
    steps:
-   - name: Checkout repository
-     uses: actions/checkout@v4
-   - name: Set up Docker Buildx
-     uses: docker/setup-buildx-action@v1
-   - name: Login to DockerHub
-     uses: docker/login-action@v3
-     with:
-       username: ${{ secrets.DOCKERHUB_USERNAME }}
-       password: ${{ secrets.DOCKERHUB_TOKEN }}
-   - name: Build and Push action
-     uses: docker/build-push-action@v6
-     with:
-       context: demo
-       file: demo/Dockerfile
-       push: true
-       tags: ${{ secrets.DOCKERHUB_USERNAME }}/argocd:${{github.run_id}}
+     - name: Checkout repository
+       uses: actions/checkout@v4
+     - name: Set up Docker Buildx
+       uses: docker/setup-buildx-action@v1
+     - name: Login to DockerHub
+       uses: docker/login-action@v3
+       with:
+         username: ${{ secrets.DOCKERHUB_USERNAME }}
+         password: ${{ secrets.DOCKERHUB_TOKEN }}
+     - name: Build and Push action
+       uses: docker/build-push-action@v6
+       with:
+         context: demo
+         file: demo/Dockerfile
+         push: true
+         tags: ${{ secrets.DOCKERHUB_USERNAME }}/argocd:${{github.run_id}}
  update-newtag-in-helm-chart:
    runs-on: ubuntu-latest
    needs: push
    steps:
-   - name: Checkout repository
-     uses: actions/checkout@v4
-   - name: Configure git
-     run: |
-       git config --global user.email "surakshamundkur@gmail.com"
-       git config --global user.name "surakshamundkur"
-   - name: Update tag in Helm chart
-     run: |
-       sed -i 's/tag: .*/tag: "${{github.run_id}}"/' demo/helm/go-web-app-chart/values.yaml
-   - name: Commit and push changes
-     env:
-       GITHUB_TOKEN: ${{ secrets.TOKEN }}
-     run: |
-       git add demo/helm/go-web-app-chart/values.yaml
-       git commit -m "Update tag in Helm chart"
-       git push
+     - name: Checkout repository
+       uses: actions/checkout@v4
+     - name: Configure git
+       run: |
+         git config --global user.email "surakshamundkur@gmail.com"
+         git config --global user.name "surakshamundkur"
+     - name: Update tag in Helm chart
+       run: |
+         sed -i 's/tag: .*/tag: "${{github.run_id}}"/' demo/helm/go-web-app-chart/values.yaml
+     - name: Commit and push changes
+       env:
+         GITHUB_TOKEN: ${{ secrets.TOKEN }}
+       run: |
+         git add demo/helm/go-web-app-chart/values.yaml
+         git commit -m "Update tag in Helm chart"
+         git push
