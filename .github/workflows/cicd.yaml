@@ -17,9 +17,13 @@ jobs:
      with:
        go-version: 1.22
    - name: Build
-     run: go build -o go-web-app ./demo
+     run: |
+       cd demo
+       go build -o go-web-app
    - name: Test
-     run: go test ./demo/...  
+     run: |
+       cd demo
+       go test ./...
  code-quality:
    runs-on: ubuntu-latest
    steps:
@@ -29,8 +33,10 @@ jobs:
      uses: golangci/golangci-lint-action@v6
      with:
        version: v1.56.2
-   - name: Lint code
-     run: golangci-lint run ./demo/...
+   - name: Run golangci-lint in demo directory
+     run: |
+       cd demo
+       golangci-lint run
  push:
    runs-on: ubuntu-latest
    needs: build
@@ -47,8 +53,8 @@ jobs:
    - name: Build and Push action
      uses: docker/build-push-action@v6
      with:
-       context: ./demo
-       file: ./demo/Dockerfile
+       context: demo
+       file: demo/Dockerfile
        push: true
        tags: ${{ secrets.DOCKERHUB_USERNAME }}/argocd:${{github.run_id}}
  update-newtag-in-helm-chart:
@@ -57,15 +63,17 @@ jobs:
    steps:
    - name: Checkout repository
      uses: actions/checkout@v4
-     with:
-       token: ${{ secrets.TOKEN }}
+   - name: Configure git
+     run: |
+       git config --global user.email "surakshamundkur@gmail.com"
+       git config --global user.name "surakshamundkur"
    - name: Update tag in Helm chart
      run: |
        sed -i 's/tag: .*/tag: "${{github.run_id}}"/' demo/helm/go-web-app-chart/values.yaml
    - name: Commit and push changes
+     env:
+       GITHUB_TOKEN: ${{ secrets.TOKEN }}
      run: |
-       git config --global user.email "surakshamundkur@gmail.com"
-       git config --global user.name "surakshamundkur"
-       git add helm/go-web-app-chart/values.yaml
+       git add demo/helm/go-web-app-chart/values.yaml
        git commit -m "Update tag in Helm chart"
        git push
