@@ -19,7 +19,7 @@ jobs:
      - name: Build
        run: go build -o go-web-app
      - name: Test
-       run: go test ./...  
+       run: go test ./...
  code-quality:
    runs-on: ubuntu-latest
    steps:
@@ -45,8 +45,8 @@ jobs:
      - name: Build and Push action
        uses: docker/build-push-action@v6
        with:
-         context: demo
-         file: demo/Dockerfile
+         context: .
+         file: Dockerfile
          push: true
          tags: ${{ secrets.DOCKERHUB_USERNAME }}/argocd:${{ github.run_id }}
  update-newtag-in-helm-chart:
@@ -61,11 +61,11 @@ jobs:
          git config --global user.name "surakshamundkur"
      - name: Update tag in Helm chart
        run: |
-         sed -i 's/tag: .*/tag: "${{ github.run_id }}"/' demo/helm/go-web-app-chart/values.yaml
+         sed -i 's/tag: .*/tag: "${{ github.run_id }}"/' helm/go-web-app-chart/values.yaml
      - name: Commit and push changes
        env:
          GITHUB_TOKEN: ${{ secrets.TOKEN }}
        run: |
-         git add demo/helm/go-web-app-chart/values.yaml
+         git add helm/go-web-app-chart/values.yaml
          git commit -m "Update tag in Helm chart"
          git push
